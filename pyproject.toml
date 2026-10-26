@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantumpoissonhomogenization"
+version = "0.1.0"
+description = "Quantum algorithms for periodic two-phase heat conduction: multiplexed state preparation, the preconditioned inverse, and the readout of the effective conductivity"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26", "scipy>=1.11", "qiskit>=1.0"]
+
+[project.optional-dependencies]
+papers = ["matplotlib>=3.7", "pyqsp>=0.2"]
+
+[project.urls]
+Repository = "https://github.com/UW-ERSL/QuantumPoissonHomogenization"
+
+[tool.setuptools]
+packages = ["quantumpoissonhomogenization", "quantumpoissonhomogenization.arithmetic"]

@@ -1,0 +1,8 @@
+# QuantumPoissonHomogenization -- reproduces every table and figure of the three papers.
+#   python -m pip install -r requirements.txt
+numpy>=1.26
+scipy>=1.11
+matplotlib>=3.7
+qiskit>=1.0
+pyqsp>=0.2            # QSVT phases
+-e .
