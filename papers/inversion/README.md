@@ -14,12 +14,12 @@ polynomial `q_t` of degree `d_t = 2t - 1` block-encodes its inverse. The code is
 | `python makeTables.py checks` | the seven checks below | about 10 minutes |
 | `python makeTables.py symbol` | Sec. 2.2: the closed-form symbol of `K` against assembly | seconds |
 | `python makeTables.py isometry` | Secs. 3.5, 3.8: factorization, the circuit gate by gate, error and Toffoli count against N and F | about 30 seconds |
-| `python makeTables.py full_unitary` | Sec. 3.8: encoding error `delta` in 42 cases and the exact unitary of Prop. gate (iii) | a few minutes |
+| `python makeTables.py full_unitary` | Sec. 3.8: encoding error `delta` in 42 cases and the nearby exact unitary | a few minutes |
 | `python makeTables.py qsvt_degree` | Sec. 3.7: degree and sup norm of `q_t` | seconds |
 | `python makeTables.py square` | Sec. 3.6: condition numbers and the gate-level encoding of `Mtilde` | about 4 minutes |
 | `python makeTables.py inverse_dense` | Sec. 3.7: the inverse on four heat sources, dense | about 1 minute |
 | `python makeTables.py qiskit_check` | Sec. 5.5: the inverse as one Qiskit circuit, N = 4 and 8, every stage against its matrix | about 2.5 minutes |
-| `python makeFigures.py` | `spectrum`, `cells`, `mesh` | about 10 minutes |
+| `python makeFigures.py` | `inclusion`, `inclusion_mesh`, `spectrum`, `cells`, `mesh` | about 10 minutes |
 | `python makeFigures.py qsvt_poly angles` | figures the paper does not use | |
 
 The baseline condition number of Sec. 5.2 uses the subnormalization `alpha = 16/3` of the encoding of

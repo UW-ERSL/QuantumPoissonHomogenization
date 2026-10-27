@@ -1,9 +1,11 @@
 """makeFigures.py -- the figures of the paper, written to figs/ as PDF.
 
-    python makeFigures.py              all three figures of the paper (about 10 minutes)
+    python makeFigures.py              all five figures of the paper (about 10 minutes)
     python makeFigures.py mesh         just that one
     python makeFigures.py --list       names and destinations
 
+figs/squareInclusion.pdf      (fig:squareInclusion, Sec. 2.1)    the square inclusion in the unit cell
+figs/HomogenizationFEA.pdf    (fig:HomogenizationFEA, Sec. 2.1)  the Q4 mesh over the same cell, N = 8
 figs/spectrum.pdf       (fig:spectrum, Sec. 2.2)   eigenvalues of K^chi and of M, square, rho = 10
 figs/cells.pdf          (fig:cells, Sec. 5.1)      the three test cells at N = 16
 figs/mesh.pdf           (fig:mesh, Sec. 5.2)       mesh refinement, N = 16 ... 1024, three cells
@@ -31,6 +33,47 @@ plt.rcParams.update({"font.size": 9, "legend.fontsize": 8, "xtick.labelsize": 8,
                      "ytick.labelsize": 8, "pdf.fonttype": 42})
 os.makedirs("figs", exist_ok=True)
 STYLE = {"square": ("-", "k", "o"), "cross": ("--", "0.35", "s"), "laminate": (":", "0.55", "^")}
+
+INCLUSION, MATRIX = "0.25", "0.68"                               # grey levels of the two phases
+
+
+def _phases(ax, N):
+    """The square cell of cells.chi on an N x N mesh, inclusion dark and matrix light, no axes."""
+    img = cells.chi("square", N).reshape(N, N).T                  # rows y, columns x
+    ax.imshow(img, origin="lower", extent=(0, 1, 0, 1), interpolation="nearest",
+              cmap=matplotlib.colors.ListedColormap([MATRIX, INCLUSION]), vmin=0, vmax=1)
+    ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.set_aspect("equal"); ax.axis("off")
+    return img
+
+
+def draw_inclusion():
+    """figs/squareInclusion.pdf (fig:squareInclusion): the square inclusion centered in the unit cell."""
+    fig, ax = plt.subplots(figsize=(2.0, 2.0))
+    img = _phases(ax, 4)
+    assert img.mean() == 0.25                                                 # "0.25 volume fraction"
+    ax.add_patch(plt.Rectangle((0, 0), 1, 1, fill=False, ec="0.15", lw=0.8))
+    ax.add_patch(plt.Rectangle((0.25, 0.25), 0.5, 0.5, fill=False, ec="0.15", lw=0.8))
+    fig.savefig("figs/squareInclusion.pdf", bbox_inches="tight", pad_inches=0.02)
+    print("figs/squareInclusion.pdf")
+
+
+def draw_inclusion_mesh(N=8):
+    """figs/HomogenizationFEA.pdf (fig:HomogenizationFEA): the N x N Q4 mesh over the square cell."""
+    fig, ax = plt.subplots(figsize=(2.0, 2.0))
+    img = _phases(ax, N)
+    assert img.mean() == 0.25                                                 # same cell as Figure 1
+    for k in range(N + 1):
+        ax.plot([k / N, k / N], [0, 1], color="0.15", lw=0.6)
+        ax.plot([0, 1], [k / N, k / N], color="0.15", lw=0.6)
+    x = np.arange(N) / N                                         # periodic: one node per (i, j), N^2 dofs
+    X, Y = np.meshgrid(x, x)
+    ax.plot(X.ravel(), Y.ravel(), "o", ms=2.2, color="k")                   # the N^2 unknowns
+    edge = np.r_[x, 1.0]
+    ax.plot(np.r_[np.ones(N + 1), x], np.r_[edge, np.ones(N)], "o", ms=2.2,  # their periodic images
+            mfc="white", mec="k", mew=0.6)
+    ax.set_xlim(-0.02, 1.02); ax.set_ylim(-0.02, 1.02)
+    fig.savefig("figs/HomogenizationFEA.pdf", bbox_inches="tight", pad_inches=0.02)
+    print("figs/HomogenizationFEA.pdf")
 
 
 def draw_spectrum():
@@ -118,6 +161,8 @@ def draw_mesh(Ns=(16, 32, 64, 128, 256, 512, 1024), rho=RHO, eps_p=1e-6):
     if Ns[0] == 16 and Ns[-1] == 1024:                                                 # Sec. 5.2 (c)
         assert (Fs[16], Fs[1024], tof[16], tof[1024]) == (39, 45, 33680, 44462), (Fs, tof)
         assert 4.1e-7 <= min(errs) and max(errs) <= 8.7e-7, (min(errs), max(errs))       # "4.1e-7 to 8.6e-7"
+        kP = [r["kappa_P"] for r in rows if r["geometry"] == "square" and r["N"] == 1024][0]
+        assert round(kP, -5) == 1.4e6, kP                                              # Sec. 2.5: "1.4e6"
     print(f"mesh: inverse error {min(errs):.2e} to {max(errs):.2e} (eps_p = {eps_p:g}, d = {d0}); "
           f"F = {Fs[Ns[0]]} to {Fs[Ns[-1]]}; Toffolis per U_V {tof[Ns[0]]:,} (N={Ns[0]}) to {tof[Ns[-1]]:,} (N={Ns[-1]})")
 
@@ -218,6 +263,8 @@ def draw_angles():
     print("figs/spectrum.pdf, figs/qsvt_poly.pdf, figs/angles.pdf")
 
 FIGURES = {
+    "inclusion": (draw_inclusion, "the square inclusion in the unit cell (fig:squareInclusion, Sec. 2.1)"),
+    "inclusion_mesh": (draw_inclusion_mesh, "the Q4 mesh over the cell, N = 8 (fig:HomogenizationFEA, Sec. 2.1)"),
     "spectrum":  (draw_spectrum,  "eigenvalues of K^chi and of M (fig:spectrum, Sec. 2.2)"),
     "cells":     (draw_cells,     "the three test cells (fig:cells, Sec. 5.1)"),
     "mesh":      (draw_mesh,      "mesh refinement, N = 16 ... 1024 (fig:mesh, Sec. 5.2)"),
@@ -232,7 +279,7 @@ def main(argv):
     every = {**FIGURES, **EXTRA}
     if "--list" in argv:
         for k, (_, d) in every.items():
-            print(f"  {k:<10} {d}")
+            print(f"  {k:<15} {d}")
         return
     wanted = [a for a in argv if not a.startswith("-")] or list(FIGURES)
     bad = [w for w in wanted if w not in every]
