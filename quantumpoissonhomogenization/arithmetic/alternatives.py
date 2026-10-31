@@ -15,7 +15,10 @@ multiplexed preparation of c(k)/||c(k)||, against which the CORDIC circuit
 
 T gates are estimated as T_PER_TOFFOLI per Toffoli (Jones 2013) and
 3 log2(1/eps) per rotation synthesized to accuracy eps (Ross and Selinger), with
-the synthesis errors of all R rotations together at most delta. These are
+the synthesis errors of all R rotations together at most delta. A controlled
+R_y is two single-qubit R_y and two CNOTs, so it counts as two synthesized
+rotations; the uniformly controlled rotations of the multiplexor are 3 N^2
+single-qubit R_y and CNOTs (Mottonen et al.). These are
 estimates from published cost formulas, not gate-level circuits; the CORDIC
 counts come from the gate lists of poisson_isometry.
 """
@@ -43,7 +46,7 @@ def _qroam(d, M):
 
 
 def fractional_bits(N, delta, c=6):
-    """F with c N 2^-F <= delta (the measured bound of Theorem 1)."""
+    """F with c N 2^-F <= delta (the measured bound of Theorem 2)."""
     return int(np.ceil(np.log2(c * N / delta)))
 
 
@@ -61,7 +64,7 @@ def options(N, delta):
     sv = poisson_isometry(n, F)
     r = sv.tree.rotation_counts()
     out["arithmetic"] = dict(toffoli=sum(sv.toffoli().values()) + r["toffoli"],
-                             rotations=r["controlled_ry"] + r["fixed_ry"],
+                             rotations=2 * r["controlled_ry"] + r["fixed_ry"],
                              work=sv.c.n - 2 * n + r["temporaries"], F=F)
     for v in out.values():
         v["T"] = T_PER_TOFFOLI * v["toffoli"] + (v["rotations"] * t_per_rotation(delta / v["rotations"])

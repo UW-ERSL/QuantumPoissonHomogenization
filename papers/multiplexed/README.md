@@ -10,11 +10,11 @@ amplitudes (`Tree`). The code is `quantumpoissonhomogenization.arithmetic`.
 | command | reproduces | time |
 |---|---|---|
 | `python makeTables.py` | both tables below | a few minutes |
-| `python makeTables.py options` | Sec. 5, Table 3 (`tables/options.tex`): the circuit against the multiplexor and the QROM lookup, N = 8 to 4096, with the crossovers asserted | about 1 second |
-| `python makeTables.py cost` | Theorem 1 and Table 1 (cost by stage at N = 1024, F = 45); Sec. 4, the error in the 42 cases and the bound of Corollary 6; the block against the Q4 assembly | a few minutes |
+| `python makeTables.py options` | Sec. 5, Table 3 (`tables/options.tex`): the circuit against the multiplexor and the QROM lookup, N = 8 to 4096, with the crossovers, the growth per doubling of N, and the share of rotation synthesis asserted | about 1 second |
+| `python makeTables.py cost` | Theorem 2 and Table 2 (cost by stage at N = 1024, F = 45); Sec. 4, the error in the 42 cases (at most 6 N 2^-F); the abstract at N = 32, F = 32 (23,089 Toffoli gates, 65 controlled rotations, error 9.0e-9); the block against the Q4 assembly | about 15 seconds |
 | `python makeTables.py checks` | the four checks below | about 30 seconds |
 | `python makeTables.py worked` | Secs. 2 and 3, the worked example at k = (3, 1), N = 16, F = 12 | seconds |
-| `python makeTables.py rotation` | Lemma 2 (rotation mode) on random angles | seconds |
-| `python makeTables.py lemma` | Lemma 3 (one vectoring) on random integer vectorings | seconds |
+| `python makeTables.py rotation` | Proposition 1, first step: the rotation-mode bound on random angles | seconds |
+| `python makeTables.py lemma` | Proposition 1, third step: the vectoring bounds on random integer vectorings | seconds |
 | `python makeTables.py counts` | Sec. 5: Toffoli and work-qubit counts against the gate lists | about 10 seconds |
 | `python makeFigures.py` | Sec. 4, Figure 4 (`figs/error.pdf`) | about 15 seconds |

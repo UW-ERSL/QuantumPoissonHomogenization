@@ -30,6 +30,6 @@ KNOWN = {(1, 1): (np.pi / 4, _R3)}
 
 def poisson_isometry(n, F, G=4):
     """The circuit for c(k)/||c(k)|| on the wavenumber register (2 x n qubits).
-    Default G = 4: the configuration of the Poisson paper (registers of F + 4
-    bits, F iterations)."""
+    Default G = 4: the configuration of the paper (registers of F + 4 bits,
+    F iterations)."""
     return SymbolVector(n, 2, F, ANGLES, C, G=G, known=KNOWN)

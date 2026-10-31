@@ -171,7 +171,7 @@ def draw_mesh(Ns=(16, 32, 64, 128, 256, 512, 1024), rho=RHO, eps_p=1e-6):
     for g in cells.GEOMETRIES:
         ls, col, mk = STYLE[g]
         ax[0].loglog(ndof(g), [r["kappa_Kc"] for r in rows if r["geometry"] == g], ls, color=col,
-                     marker=mk, ms=3, lw=1, label=g)
+                     marker=mk, ms=3, lw=1, label=r"$\kappa_{\mathrm{QSVT}}$, " + g)
         ax[1].loglog(ndof(g), [r["inv_err"] for r in rows if r["geometry"] == g], ls, color=col,
                      marker=mk, ms=3, lw=1, label=g)
     ax[0].loglog(ndof("square"), [r["kappa_M"] for r in rows if r["geometry"] == "square"], "-",
@@ -180,7 +180,7 @@ def draw_mesh(Ns=(16, 32, 64, 128, 256, 512, 1024), rho=RHO, eps_p=1e-6):
     ax[0].set_ylim(3, 3e7)
     ax[0].legend(frameon=False, fontsize=6, loc="lower right", bbox_to_anchor=(1.0, 0.12),
                  handlelength=1.6, labelspacing=0.25)
-    ax[0].set_title(r"(a) $\kappa(\mathbf{K}^{\chi})$ and $\kappa(\tilde{\mathbf{M}})$", fontsize=9)
+    ax[0].set_title(r"(a) $\kappa_{\mathrm{QSVT}}$ and $\kappa(\tilde{\mathbf{M}})$", fontsize=9)
     ax[1].axhline(eps_p, color="0.5", lw=0.8, ls="--")
     ax[1].text(ndof("square")[0], eps_p * 1.25, r"$\epsilon_p$", fontsize=8)
     ax[1].set_ylim(1e-7, 1e-5); ax[1].set_xlabel(r"$N_{\mathrm{dof}}$")

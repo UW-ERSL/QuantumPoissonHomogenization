@@ -1,8 +1,9 @@
 """makeTables.py -- the tables and the checks of the multiplexed state preparation paper.
 
-    python makeTables.py                 Table 3 (tables/options.tex) and Table 1 with Sec. 4 (a few minutes)
+    python makeTables.py                 Table 3 (tables/options.tex), and Theorem 2 and Table 2 with Sec. 4
     python makeTables.py options         just Table 3
-    python makeTables.py checks          the worked example, Lemmas 2 and 3, and the counts of Sec. 5
+    python makeTables.py checks          the worked example, the rotation-mode and vectoring bounds of the
+                                         proof of Proposition 1, and the counts of Sec. 5
     python makeTables.py --list          names
 
 Every number the paper quotes is asserted before it is printed or written.
@@ -26,8 +27,9 @@ from quantumpoissonhomogenization.reproduce import dispatch
 def tab_options() -> None:
     """Sec. 5, Table 3: the CORDIC circuit against the two standard constructions
     (multiplexor of standard state preparation, QROM lookup of tabulated angles),
-    at the accuracy delta = 1.955e-10 of the companion paper (rho = 10,
-    eps_p = 1e-6), for N = 8 to 4096. Asserts the statements of Sec. 5 and 6,
+    at the accuracy delta = 1.955e-10, for N = 8 to 4096. Asserts the statements
+    of Secs. 5 and 6 (crossovers, F = 45 and b = 35 at N = 1024, about 1,800
+    Toffoli gates per doubling of N, synthesis about 11 percent of the T count),
     prints every N, and writes the rows of Table 3 (N = 16, 64, 256, 1024, 2048,
     4096) to tables/options.tex."""
     delta = 1.955e-10
@@ -40,6 +42,11 @@ def tab_options() -> None:
     assert T(4096, "lookup") > T(4096, "arithmetic")
     assert o[1024]["arithmetic"]["F"] == 45 and o[1024]["arithmetic"]["toffoli"] == 44424
     assert o[1024]["lookup"]["b"] == 35
+    growth = np.diff([o[N]["arithmetic"]["toffoli"] for N in Ns if N >= 16])
+    assert 1700 < growth.mean() < 1900                     # about 1,800 per doubling of N
+    a = o[1024]["arithmetic"]
+    share = (a["T"] - 4 * a["toffoli"]) / a["T"]
+    assert 0.10 < share < 0.12                             # synthesis about 11 percent
 
     print(f"delta = {delta:g}")
     print("     N   F    T: multiplexor    lookup  arithmetic   Toffoli: lookup  arithmetic"
@@ -50,8 +57,9 @@ def tab_options() -> None:
               f"   {l['toffoli']:14,d}  {a['toffoli']:10,d}   {l['work']:12,d}  {a['work']:10,d}")
     l, a = o[1024]["lookup"], o[1024]["arithmetic"]
     print(f"N = 1024: arithmetic / lookup Toffoli = {a['toffoli'] / l['toffoli']:.2f}; "
-          f"rotation synthesis of the arithmetic {a['rotations']} rotations, "
-          f"{a['T'] - 4 * a['toffoli']:,.0f} T gates")
+          f"rotation synthesis of the arithmetic {a['rotations']} single-qubit rotations, "
+          f"{a['T'] - 4 * a['toffoli']:,.0f} T gates, {100 * share:.1f} percent of its T count; "
+          f"Toffoli growth per doubling of N {growth.mean():,.0f}")
 
 
     # ----- the rows of Table 3, as typeset in the paper
@@ -81,10 +89,12 @@ def tab_options() -> None:
 def tab_cost() -> None:
     """The Fourier blocks of the Poisson isometry (Q4 elements, two dimensions).
 
-    1. Cost at N = 1024, F = 45, G = 4, by stage (Table 1 of the paper).
+    1. Cost at N = 1024, F = 45, G = 4, by stage (Theorem 2 and Table 2 of the
+       paper).
     2. Error of the prepared vector c~(k) against c(k)/||c(k)||, simulated bit by bit
-       over every k != 0, for N = 4 ... 256 and F = 12, 16, ..., 32 (42 cases),
-       with the proven bound of Corollary 6 checked at every k.
+       over every k != 0, for N = 4 ... 256 and F = 12, 16, ..., 32 (42 cases):
+       the measured bound 6 N 2^-F of Sec. 4, and the numbers of the abstract at
+       N = 32, F = 32.
     3. The block itself: e^(i(phi1+phi2)) T c~(k) against Vhat(k) assembled element
        by element from the Q4 gradient, at N = 16, F = 24."""
     # 1. cost
@@ -112,7 +122,7 @@ def tab_cost() -> None:
           f"work qubits {work:,} ({sv.c.n - 2 * n:,} arithmetic, {r['temporaries']} rotation stage)")
 
     # 2. error, 42 cases
-    print("\n  N   F   max err 2^F/N   proven bound 2^F/N (max over k)")
+    print("\n  N   F   max err 2^F/N")
     worst = 0
     for n in range(2, 9):
         for F in range(12, 33, 4):
@@ -120,12 +130,19 @@ def tab_cost() -> None:
             amp, vreg, vex, treg, tex, ck = sv.simulate()
             assert ck["work_bits_left_set"] == 0 and ck["inputs_restored"] and ck["no_overflow"]
             e = np.linalg.norm(amp - exact_unit(vex), axis=1)
-            b = sv.end_to_end_bound(vex)
-            assert np.all(e <= b)
             worst = max(worst, e.max() * 2 ** F / 2 ** n)
             if F in (12, 32):
-                print(f"{2**n:4d}  {F}      {e.max() * 2**F / 2**n:6.3f}        {b.max() * 2**F / 2**n:11.1f}")
+                print(f"{2**n:4d}  {F}      {e.max() * 2**F / 2**n:6.3f}")
+            if (n, F) == (5, 32):               # the abstract: N = 32, F = 32
+                r32 = sv.tree.rotation_counts()
+                t32 = sum(sv.toffoli().values()) + r32["toffoli"]
+                assert t32 == 23089 and r32["controlled_ry"] == 65 and len(sv.tree.digits[(1, 1)]) == 11
+                assert 8.95e-9 < e.max() < 9.05e-9
+                abstract = (f"N = 32, F = 32: {t32:,} Toffoli, {r32['controlled_ry']} controlled rotations, "
+                            f"max err {e.max():.1e}")
+    assert worst <= 6
     print(f"max err 2^F/N over the 42 cases: {worst:.2f}")
+    print(abstract)
 
 
     # 3. the block Vhat(k), assembled element by element
@@ -214,7 +231,7 @@ def check_worked() -> None:
 
 
 def check_rotation() -> None:
-    """Lemma 2 (rotation mode) of the companion paper: check the bound
+    """Rotation mode, the first step of the proof of Proposition 1: check the bound
     ||(x_I, y_I) - (cos theta, sin theta)|| <= 2^(1-I) + I u_z / 2 + K u / 2 + sqrt(2) kappa (I - 1) u, kappa = 1.0415,
     on integer rotation mode with floor-truncated shifts, angle constants rounded to
     the angle grid, and the start value 1/K rounded, as in revcirc.cordic_rotate.
@@ -245,11 +262,11 @@ def check_rotation() -> None:
         rbound = np.arctan(2.0 ** -(I - 1)) + I * uz / 2
         print(f"{I:2d}      {err.max() / bound:.3f}             {np.abs(th - phi).max() / rbound:.3f}")
         assert err.max() <= bound and np.abs(th - phi).max() <= rbound
-    print("Lemma 2 holds in every case")
+    print("the rotation-mode bound holds in every case")
 
 
 def check_lemma() -> None:
-    """Lemma 3 of the companion paper: check every inequality of the proof on integer vectoring with
+    """One vectoring, the third step of the proof of Proposition 1: check the bounds on integer vectoring with
     floor-truncated shifts (I fractional bits, I iterations, u = 2^-I), on
     200,000 random pairs per I with magnitudes down to 2^-I, seed 5."""
     rng = np.random.default_rng(5)
@@ -270,7 +287,7 @@ def check_lemma() -> None:
             x, y = xn, yn
             th += s * np.arctan(2.0 ** -i)
 
-        # the two claims of Lemma 3
+        # the two bounds on the direction and the length
         K = np.prod(np.sqrt(1 + 4.0 ** -np.arange(I)))
         X0, Y0, X, Y = x0 * u, y0 * u, x * u, y * u
         rho = np.hypot(X0, Y0)
@@ -320,12 +337,12 @@ def check_counts() -> None:
 
 TABLES = {
     "options": (tab_options, "Table 3: the circuit against the multiplexor and the QROM lookup (Sec. 5)"),
-    "cost":    (tab_cost,    "Theorem 1 and Table 1 at N = 1024, F = 45; the 42 error cases (Sec. 4)"),
+    "cost":    (tab_cost,    "Theorem 2 and Table 2 at N = 1024, F = 45; the 42 error cases (Sec. 4); the abstract"),
 }
 CHECKS = {
     "worked":   (check_worked,   "the worked example at k = (3, 1), N = 16, F = 12 (Secs. 2, 3)"),
-    "rotation": (check_rotation, "Lemma 2, rotation mode, on random angles"),
-    "lemma":    (check_lemma,    "Lemma 3, one vectoring, on random integer vectorings"),
+    "rotation": (check_rotation, "rotation-mode bound (Proposition 1, first step) on random angles"),
+    "lemma":    (check_lemma,    "vectoring bounds (Proposition 1, third step) on random integer vectorings"),
     "counts":   (check_counts,   "Toffoli and work-qubit counts against the gate lists (Sec. 5)"),
 }
 

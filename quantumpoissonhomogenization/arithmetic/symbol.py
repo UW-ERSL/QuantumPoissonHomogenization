@@ -1,5 +1,5 @@
 """symbol -- the full circuit for vectors whose entries are trigonometric
-polynomials of the index (the scalar case of the note).
+polynomials of the index (the scalar case).
 
 The vector is v(j) = C t(j), with
 
@@ -227,7 +227,8 @@ class SymbolVector:
 
     # -- bounds of the note -------------------------------------------------------------
     def eps_trig(self):
-        """Lemma (rotation mode): ||(x_I, y_I) - (cos, sin)|| <= this."""
+        """Rotation-mode bound: ||(x_I, y_I) - (cos, sin)|| <= this (checked by
+        makeTables.py rotation; first step of the proof of Proposition 1)."""
         I, u = self.I, 2.0 ** -self.Fi
         uz = np.pi * 2.0 ** -self.Fz
         return 2.0 ** (1 - I) + I * uz / 2 + cordic_gain(I) * u / 2 + np.sqrt(2) * 1.0415 * (I - 1) * u
@@ -251,7 +252,8 @@ class SymbolVector:
         return np.array(out)
 
     def end_to_end_bound(self, vex):
-        """Corollary (end to end): for each index,
+        """End-to-end bound of an earlier draft, not used in the paper (whose
+        Proposition 1 gives the form C F N 2^-F without a value of C): for each index,
         ||prepared - v/||v|| || <= 2 delta/||v|| + T/(||v|| - delta), with
         delta = ||entry_bounds||_2 and T = m (a + 16.5 b + 6.9 eta) from
         Propositions 4, 5 and Lemma 3 at I = F, u = 2^-F, Lambda = ||v|| + delta + 0.007."""
