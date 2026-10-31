@@ -4,14 +4,11 @@
     python makeFigures.py mesh         just that one
     python makeFigures.py --list       names and destinations
 
-figs/squareInclusion.pdf      (fig:squareInclusion, Sec. 2.1)    the square inclusion in the unit cell
-figs/HomogenizationFEA.pdf    (fig:HomogenizationFEA, Sec. 2.1)  the Q4 mesh over the same cell, N = 8
+figs/squareInclusion.pdf   (fig:cell(a), Sec. 2.1)    the square inclusion in the unit cell
+figs/HomogenizationFEA.pdf (fig:cell(b), Sec. 2.1)    the Q4 mesh over the same cell, N = 8
 figs/spectrum.pdf       (fig:spectrum, Sec. 2.2)   eigenvalues of K^chi and of M, square, rho = 10
 figs/cells.pdf          (fig:cells, Sec. 5.1)      the three test cells at N = 16
 figs/mesh.pdf           (fig:mesh, Sec. 5.2)       mesh refinement, N = 16 ... 1024, three cells
-
-Not in the paper, drawn only when named: `qsvt_poly` (q_t at eps_p = 1e-3) and `angles` (omega and sin^2 tau
-over the wavenumbers, N = 32).
 
 Every number the text quotes about a figure is ASSERTED before the figure is
 written. The test cells and the matrix-free operators are those of cells.py.
@@ -47,7 +44,7 @@ def _phases(ax, N):
 
 
 def draw_inclusion():
-    """figs/squareInclusion.pdf (fig:squareInclusion): the square inclusion centered in the unit cell."""
+    """figs/squareInclusion.pdf (fig:cell(a)): the square inclusion centered in the unit cell."""
     fig, ax = plt.subplots(figsize=(2.0, 2.0))
     img = _phases(ax, 4)
     assert img.mean() == 0.25                                                 # "0.25 volume fraction"
@@ -58,7 +55,7 @@ def draw_inclusion():
 
 
 def draw_inclusion_mesh(N=8):
-    """figs/HomogenizationFEA.pdf (fig:HomogenizationFEA): the N x N Q4 mesh over the square cell."""
+    """figs/HomogenizationFEA.pdf (fig:cell(b)): the N x N Q4 mesh over the square cell."""
     fig, ax = plt.subplots(figsize=(2.0, 2.0))
     img = _phases(ax, N)
     assert img.mean() == 0.25                                                 # same cell as Figure 1
@@ -193,100 +190,26 @@ def draw_mesh(Ns=(16, 32, 64, 128, 256, 512, 1024), rho=RHO, eps_p=1e-6):
     fig.tight_layout(); fig.savefig("figs/mesh.pdf"); print("figs/mesh.pdf")
 
 
-def T(t, z):
-    """Chebyshev polynomial T_t, valid inside and outside [-1, 1]."""
-    z = np.asarray(z, float); out = np.empty_like(z); i = np.abs(z) <= 1
-    out[i] = np.cos(t * np.arccos(z[i]))
-    out[~i] = np.sign(z[~i]) ** t * np.cosh(t * np.arccosh(np.abs(z[~i])))
-    return out
-
-
-def draw_qsvt_poly():
-    """figs/qsvt_poly.pdf: the odd QSVT polynomial q_t, rho = 10, eps_p = 1e-3 (not in the paper)."""
-    eps = 1e-3
-    a = 1 / RHO ** 2; s = (1 + a) / (1 - a)
-    t = int(np.ceil(np.arccosh(1 / eps) / np.arccosh(s)))
-    qt = lambda x: (1 - T(t, (1 + a - 2 * x ** 2) / (1 - a)) / np.cosh(t * np.arccosh(s))) / x
-    x = np.linspace(-1, 1, 400001); x = x[x != 0]
-    q = qt(x)
-    C, xr = np.abs(q).max(), abs(x[np.argmax(np.abs(q))])
-    xp = np.linspace(1 / RHO, 1, 20001)
-    res = np.abs(xp * qt(xp) - 1)
-    assert 2 * t - 1 == 75 and abs(C / RHO - 1.30) < 0.005 and abs(xr * RHO - 0.585) < 0.001
-    assert res.max() <= eps and abs(res.max() - 9.8e-4) < 0.05e-4                # "9.8e-4 <= eps_p"
-    print(f"q_t: d = {2 * t - 1}, C = {C / RHO:.3f} rho at |x| = {xr * RHO:.3f}/rho, residual {res.max():.3e}")
-    fig, ax = plt.subplots(1, 2, figsize=(6.5, 2.5))
-    ax[0].plot(x, q, "k", lw=1.0, label=r"$q_t(x)$")
-    xx = np.linspace(1 / RHO, 1, 200)
-    ax[0].plot(xx, 1 / xx, color="0.55", lw=2.5, ls=":", label=r"$1/x$")
-    ax[0].plot(-xx, -1 / xx, color="0.55", lw=2.5, ls=":")
-    for v in (-1 / RHO, 1 / RHO):
-        ax[0].axvline(v, color="0.7", lw=0.6)
-    ax[0].set_xlim(-1, 1); ax[0].set_ylim(-1.6 * RHO, 1.6 * RHO); ax[0].set_xlabel("$x$")
-    ax[0].legend(loc="upper left", frameon=False)
-    ax[0].set_title(f"(a) $q_t$ of degree $d_t = {2 * t - 1}$", fontsize=9)
-    ax[1].semilogy(xp, res + 1e-18, "k", lw=0.8)
-    ax[1].axhline(eps, color="0.5", lw=0.8, ls="--")
-    ax[1].text(0.115, eps * 1.6, r"$\epsilon_p = 10^{-3}$", fontsize=8)
-    ax[1].set_xlim(1 / RHO, 1); ax[1].set_ylim(1e-7, 1e-2); ax[1].set_xlabel("$x$")
-    ax[1].set_title(r"(b) $|x\,q_t(x) - 1|$ on $[1/\rho, 1]$", fontsize=9)
-    fig.tight_layout(); fig.savefig("figs/qsvt_poly.pdf")
-
-
-def draw_angles():
-    """figs/angles.pdf: omega(k) and the hourglass fraction sin^2 tau(k), N = 32 (not in the paper)."""
-    from quantumpoissonhomogenization.isometry import exact_angles
-    N = 32
-    om = np.full((N, N), np.nan); hg = np.full((N, N), np.nan)
-    for k1 in range(N):
-        for k2 in range(N):
-            if (k1, k2) == (0, 0):
-                continue
-            o, t_ = exact_angles(N, k1, k2)
-            hg[k1, k2] = np.sin(t_) ** 2
-            if (k1, k2) != (N // 2, N // 2):
-                om[k1, k2] = np.degrees(o)
-    assert np.nanmax(np.abs(hg[:, 0])) < 1e-14 and np.nanmax(np.abs(hg[0, :])) < 1e-14   # "k on an axis: no hourglass"
-    assert abs(hg[N // 2, N // 2] - 1) < 1e-14                                           # "(N/2, N/2): pure hourglass"
-    assert abs(hg[N // 4, N // 4] - 0.25) < 1e-14                                        # "(N/4, N/4): 1/4"
-    fig, ax = plt.subplots(1, 2, figsize=(6.5, 2.7))
-    for a_, Z, ttl, lab in ((ax[0], om, r"(a) $\omega(\mathbf{k})$", "degrees"),
-                           (ax[1], hg, r"(b) $\sin^2\tau(\mathbf{k})$", "")):
-        im = a_.imshow(Z.T, origin="lower", cmap="viridis", extent=(-0.5, N - 0.5, -0.5, N - 0.5))
-        a_.set_xlabel("$k_1$"); a_.set_ylabel("$k_2$"); a_.set_title(ttl, fontsize=9)
-        a_.set_xticks([0, 8, 16, 24, 31]); a_.set_yticks([0, 8, 16, 24, 31])
-        cb = fig.colorbar(im, ax=a_, fraction=0.046, pad=0.04)
-        if lab:
-            cb.set_label(lab, fontsize=8)
-        cb.ax.tick_params(labelsize=8)
-    fig.tight_layout(); fig.savefig("figs/angles.pdf")
-    print("figs/spectrum.pdf, figs/qsvt_poly.pdf, figs/angles.pdf")
-
 FIGURES = {
-    "inclusion": (draw_inclusion, "the square inclusion in the unit cell (fig:squareInclusion, Sec. 2.1)"),
-    "inclusion_mesh": (draw_inclusion_mesh, "the Q4 mesh over the cell, N = 8 (fig:HomogenizationFEA, Sec. 2.1)"),
+    "inclusion": (draw_inclusion, "the square inclusion in the unit cell (fig:cell(a), Sec. 2.1)"),
+    "inclusion_mesh": (draw_inclusion_mesh, "the Q4 mesh over the cell, N = 8 (fig:cell(b), Sec. 2.1)"),
     "spectrum":  (draw_spectrum,  "eigenvalues of K^chi and of M (fig:spectrum, Sec. 2.2)"),
     "cells":     (draw_cells,     "the three test cells (fig:cells, Sec. 5.1)"),
     "mesh":      (draw_mesh,      "mesh refinement, N = 16 ... 1024 (fig:mesh, Sec. 5.2)"),
 }
-EXTRA = {
-    "qsvt_poly": (draw_qsvt_poly, "q_t at eps_p = 1e-3 (not in the paper)"),
-    "angles":    (draw_angles,    "omega and sin^2 tau, N = 32 (not in the paper)"),
-}
 
 
 def main(argv):
-    every = {**FIGURES, **EXTRA}
     if "--list" in argv:
-        for k, (_, d) in every.items():
+        for k, (_, d) in FIGURES.items():
             print(f"  {k:<15} {d}")
         return
     wanted = [a for a in argv if not a.startswith("-")] or list(FIGURES)
-    bad = [w for w in wanted if w not in every]
+    bad = [w for w in wanted if w not in FIGURES]
     if bad:
-        raise SystemExit(f"unknown figure(s) {bad}; choose from {list(every)}")
+        raise SystemExit(f"unknown figure(s) {bad}; choose from {list(FIGURES)}")
     for name in wanted:
-        fn, desc = every[name]
+        fn, desc = FIGURES[name]
         print(f"{name}  ({desc})", flush=True)
         fn()
     print("\ndone")

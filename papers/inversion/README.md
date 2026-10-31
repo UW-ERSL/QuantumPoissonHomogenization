@@ -8,7 +8,7 @@ polynomial `q_t` of degree `d_t = 2t - 1` block-encodes its inverse. The code is
 
 | command | reproduces | time |
 |---|---|---|
-| `python makeTables.py` | the six tables: `options`, `geometry`, `be_M`, `inverse`, `qiskit`, `resources` | about 3 minutes |
+| `python makeTables.py` | the four tables: `geometry`, `be_M`, `inverse`, `resources` | about 2 minutes |
 | `python makeTables.py inverse` | one table | |
 | `python makeTables.py listings` | Listings 1 to 3 of Sec. 4, output compared with the paper | about 20 seconds |
 | `python makeTables.py checks` | the seven checks below | about 10 minutes |
@@ -20,7 +20,6 @@ polynomial `q_t` of degree `d_t = 2t - 1` block-encodes its inverse. The code is
 | `python makeTables.py inverse_dense` | Sec. 3.7: the inverse on four heat sources, dense | about 1 minute |
 | `python makeTables.py qiskit_check` | Sec. 5.5: the inverse as one Qiskit circuit, N = 4 and 8, every stage against its matrix | about 2.5 minutes |
 | `python makeFigures.py` | `inclusion`, `inclusion_mesh`, `spectrum`, `cells`, `mesh` | about 10 minutes |
-| `python makeFigures.py qsvt_poly angles` | figures the paper does not use | |
 
 The baseline condition number of Sec. 5.2 uses the subnormalization `alpha = 16/3` of the encoding of
 `K^chi / sigma_max` (`quantumpoissonhomogenization.cells.ALPHA`); when pyblockencode is installed,

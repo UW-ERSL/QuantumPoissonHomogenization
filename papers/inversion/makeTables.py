@@ -1,6 +1,6 @@
 """makeTables.py -- every table of the paper, written to tables/ as LaTeX.
 
-    python makeTables.py                 all six tables (about 3 minutes)
+    python makeTables.py                 all four tables (about 2 minutes)
     python makeTables.py inverse         just that one
     python makeTables.py checks          the checks of Secs. 2-3 and 5 quoted in the text (about 10 minutes)
     python makeTables.py listings        Listings 1-3, output compared with the paper (about 20 seconds)
@@ -74,10 +74,6 @@ def intx(x) -> str:
     return f"${int(x):,}$".replace(",", "{,}")
 
 
-def kappa_fmt(x: float) -> str:
-    return f"${x:.0f}$" if x < 1000 else sci(x, 3)
-
-
 # ==========================================================================
 #  tab:geometry (Sec. 5.1): extreme eigenvalues of Mtilde for the three cells
 # ==========================================================================
@@ -122,37 +118,6 @@ def tab_resources(N: int = 1024, eps_ps=(1e-3, 1e-6)) -> None:
 
 
 # ==========================================================================
-#  tab:options (Sec. 3.8): three constructions of the wavenumber-controlled stage
-# ==========================================================================
-def tab_options(Ns=(16, 64, 256, 1024, 4096), eps_p=1e-6) -> None:
-    rows, opt = [], {}
-    for N in (8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096):
-        opt[N] = inversion.stage_options(N, RHO, eps_p)
-    # claims of Sec. 3.8
-    T = lambda N, k: opt[N][k]["T"]
-    assert all(T(N, "mux") < T(N, "arith") for N in (8, 16))                       # mux cheapest to N = 16
-    assert all(T(N, "mux") > T(N, "arith") for N in opt if N >= 32)
-    assert all(T(N, "lookup") < T(N, "arith") for N in opt if N <= 2048)             # lookup to N = 2048
-    assert T(4096, "lookup") > T(4096, "arith")
-    o = opt[1024]
-    assert (o["arith"]["toffoli"], o["lookup"]["toffoli"], o["arith"]["work"], o["lookup"]["work"]) == \
-        (44462, 19273, 5672, 9030)
-    assert round(o["arith"]["toffoli"] / o["lookup"]["toffoli"], 1) == 2.3 and o["lookup"]["b"] == 35
-    assert o["mux"]["rotations"] == 3 * 1024 ** 2
-    for N in Ns:
-        v = opt[N]
-        rows.append([f"${N}$", f"${v['F']}$", sci(v["mux"]["T"]), sci(v["lookup"]["T"]), sci(v["arith"]["T"]),
-                     intx(v["lookup"]["work"]), intx(v["arith"]["work"])])
-        print(f"       N={N}: T mux {v['mux']['T']:.3g}, lookup {v['lookup']['T']:.3g} "
-              f"({v['lookup']['toffoli']:,} Toffoli), arith {v['arith']['T']:.3g} ({v['arith']['toffoli']:,}); "
-              f"work lookup {v['lookup']['work']:,}, arith {v['arith']['work']:,}")
-    top = (r" &  & \multicolumn{3}{c}{T gates} & \multicolumn{2}{c}{work qubits}\\"
-           r" \cmidrule(lr){3-5}\cmidrule(lr){6-7} $N$")
-    write("options", "rrrrrrr", [top, "$F$", "multiplexor", "table lookup", "arithmetic",
-                                 "table lookup", "arithmetic"], rows)
-
-
-# ==========================================================================
 #  tab:be-M: encoding of Mtilde from the gate-level circuit
 # ==========================================================================
 def tab_be_M() -> None:
@@ -190,31 +155,10 @@ def tab_inverse() -> None:
           f"F=32: {dev[32]:.1e}")
 
 
-def tab_qiskit(Ns=(4, 8), rho=10.0, eps_p=1e-3) -> None:
-    rows = []
-    for N in Ns:
-        r = inversion.qiskit_inverse(N, rho, eps_p)
-        assert r["err_Q"] < 1e-12 and r["err_M"] < 1e-12 and r["err_q"] < 1e-10, N
-        assert r["rhs_err"] < 1e-12, N
-        assert r["energy"] <= eps_p, (N, r["energy"])                 # "below eps_p"
-        assert 2e-3 < r["p_success"] < 3e-3, (N, r["p_success"])      # "about 0.24 percent"
-        assert r["d"] == 77 and abs(r["alpha"] - 13.2) < 0.05
-        rows.append([f"${N}$", f"${r['qubits']}$", intx(r["U_V"][1]), intx(r["U_M"][1]),
-                     intx(r["inverse"][1]), intx(r["inverse"][2]), intx(r["inverse"][3]),
-                     sci(r["energy"]), sci(r["p_success"])])
-        print(f"       N = {N}: rhs P = {r['p_rhs']:.4f}, block U_M {r['err_M']:.1e}, "
-              f"out {r['err_q']:.1e}, U_q CX {r['U_q'][1]:,}, rhs CX {r['rhs'][1]:,}")
-    write("qiskit", "rrrrrrrrr",
-          ["$N$", "qubits", r"CX, $\mathcal{U}_V$", r"CX, $\mathcal{U}_M$", "CX", "1-qubit",
-           "depth", "energy error", "success"], rows)
-
-
 TABLES = {
-    "options":   (tab_options,   "three constructions of the wavenumber-controlled stage (tab:options, Sec. 3.8)"),
     "geometry":  (tab_geometry,  "extreme eigenvalues of Mtilde, three cells (tab:geometry, Sec. 5.1)"),
     "be_M":      (tab_be_M,      "encoding of Mtilde from the gate-level circuit (tab:be-M, Sec. 5.3)"),
     "inverse":   (tab_inverse,   "the inverse on four sources (tab:inverse, Sec. 5.4)"),
-    "qiskit":    (tab_qiskit,    "the inverse as one Qiskit circuit (tab:qiskit, Sec. 5.5)"),
     "resources": (tab_resources, "logical resources of the inverse (tab:resources, Sec. 5.6)"),
 }
 
@@ -340,7 +284,11 @@ def check_qiskit() -> None:
             nq, cx, u1, dep = r[name]
             print(f"  {name:8s} qubits {nq:3d}   CX {cx:7,d}   1q {u1:7,d}   depth {dep:7,d}")
         assert r["err_Q"] < 1e-12 and r["err_M"] < 1e-12 and r["err_q"] < 1e-10
-        assert r["rhs_err"] < 1e-12 and r["energy"] <= eps_p
+        assert r["rhs_err"] < 1e-12 and r["energy"] <= eps_p            # "below eps_p"
+        assert r["d"] == 77 and abs(r["alpha"] - 13.2) < 0.05           # d_t and C of Sec. 3.7
+        assert 2e-3 < r["p_success"] < 3e-3, (N, r["p_success"])        # "2.4 x 10^-3 at both meshes"
+        assert r["qubits"] == 2 * int(np.log2(N)) + 9                   # "13 qubits at N = 4 and 15 at N = 8"
+        assert r["U_V"][1] == {4: 138, 8: 310}[N]                       # "CX of U_V grows from 138 to 310"
     print(f"[{time.time() - t0:.0f} s]")
     print("---------------------------------------------------------------")
 
