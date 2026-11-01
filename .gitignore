@@ -7,3 +7,4 @@ dist/
 tables/
 figs/
 .vscode/
+.ipynb_checkpoints/

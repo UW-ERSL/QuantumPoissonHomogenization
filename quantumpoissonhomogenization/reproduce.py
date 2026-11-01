@@ -14,6 +14,7 @@ the paper's `----- output --------------` block.
 """
 import contextlib
 import io
+import json
 import time
 
 
@@ -50,3 +51,31 @@ def run_listing(name, code, expected):
     print(out)
     assert out == expected.strip("\n"), f"{name}: output differs from the paper"
     print("    identical to the output printed in the paper")
+
+
+def write_notebook(path, title, intro, listings):
+    """Emit the listings of a paper as a Jupyter tutorial, purposes and outputs included.
+
+    `listings` is a sequence of (heading, purpose, code, expected). The code and the
+    expected output are the same constants `run_listing` checks against the paper, so
+    the notebook cannot drift from either. Regenerate it whenever a listing changes.
+    """
+    def lines(text):
+        return [l + "\n" for l in text.strip("\n").split("\n")]
+
+    cells = [dict(cell_type="markdown", id="intro", metadata={},
+                  source=[f"# {title}\n", "\n"] + lines(intro))]
+    for i, (heading, purpose, code, expected) in enumerate(listings, 1):
+        cells.append(dict(cell_type="markdown", id=f"md{i}", metadata={},
+                          source=[f"## {heading}\n", "\n"] + lines(purpose)))
+        cells.append(dict(cell_type="code", id=f"code{i}", execution_count=None, metadata={},
+                          outputs=[dict(output_type="stream", name="stdout",
+                                        text=lines(expected))],
+                          source=lines(code)))
+    nb = dict(cells=cells, metadata=dict(
+        kernelspec=dict(display_name="Python 3", language="python", name="python3"),
+        language_info=dict(name="python")), nbformat=4, nbformat_minor=5)
+    with open(path, "w") as f:
+        json.dump(nb, f, indent=1)
+        f.write("\n")
+    print(f"    {path}")

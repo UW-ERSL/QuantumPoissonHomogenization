@@ -32,7 +32,7 @@ import numpy as np
 
 from quantumpoissonhomogenization import cells, inversion
 from quantumpoissonhomogenization.inversion import prop4_check, full_error, inverse_case, residual, LOADS
-from quantumpoissonhomogenization.reproduce import dispatch, run_listing
+from quantumpoissonhomogenization.reproduce import dispatch, run_listing, write_notebook
 
 TABDIR = "tables"
 RHO = 10.0
@@ -379,12 +379,54 @@ CHECKS = {
     "inverse_dense": (check_inverse,     "the inverse on four sources, dense (Sec. 3.7)"),
     "qiskit_check": (check_qiskit,       "the inverse as one Qiskit circuit, N = 4 and 8 (Sec. 5.5)"),
 }
-LISTINGS = {
-    "listing1": (lambda: run_listing("listing1", LISTING_1, OUTPUT_1), "Listing 1 (Sec. 4)"),
-    "listing2": (lambda: run_listing("listing2", LISTING_2, OUTPUT_2), "Listing 2 (Sec. 4)"),
-    "listing3": (lambda: run_listing("listing3", LISTING_3, OUTPUT_3), "Listing 3 (Sec. 4)"),
-}
+LISTING_SRC = [
+    ("Listing 1. The inverse on the square at $N = 256$, and its resources at $N = 1024$",
+     "The simplest use of the package. We build the square cell at $N = 256$ and "
+     "$\\rho = 10$, compute the extreme eigenvalues of $\\tilde{M}$, apply the inverse at "
+     "$\\epsilon_p = 10^{-6}$ to the source of the cell problem for the macroscopic gradient "
+     "$(1, 0)$, and then compute the resources of the inverse at $N = 1024$. Each quantity is a "
+     "single function call. Here $q_t(\\tilde{M})$ is applied as a matrix polynomial, without "
+     "gates: the condition number is $\\rho$ and the energy error stays within $\\epsilon_p$. "
+     "Runs in a few seconds.",
+     LISTING_1, OUTPUT_1),
+    ("Listing 2. The gate-level $\\mathcal{U}_V$ at $N = 16$ and $F = 24$, checked against "
+     "$\\hat{V}(k)$ at every wavenumber",
+     "One level down, to the circuit itself. We build $\\mathcal{U}_V$ at $N = 16$ and "
+     "$F = 24$ fractional bits, simulate it gate by gate for all $256$ wavenumbers, and compare "
+     "the vector that $\\mathcal{Q}(k)$ prepares with the closed-form $\\hat{V}(k)$. The "
+     "checks also confirm that the work register comes back empty and the wavenumber inputs are "
+     "restored, which is what makes the circuit reusable inside $\\mathcal{U}_M$. "
+     "Runs in a few seconds.",
+     LISTING_2, OUTPUT_2),
+    ("Listing 3. The entire inverse as one Qiskit circuit at $N = 4$, simulated by state vector",
+     "The whole algorithm end to end. We build the inverse, from the right-hand side to the "
+     "output state, as one Qiskit circuit for the square at $N = 4$, $\\rho = 10$ and "
+     "$\\epsilon_p = 10^{-3}$, simulate it by state vector, and compare the output with the "
+     "finite element solution. The block of $\\mathcal{U}_M$ matches $\\tilde{M}$ to machine "
+     "precision and the energy error is below $\\epsilon_p$; the success probability is the "
+     "price of postselection. Runs in about $15$ seconds.",
+     LISTING_3, OUTPUT_3)]
+LISTINGS = {f"listing{i}": (lambda n=f"listing{i}", c=c, e=e: run_listing(n, c, e),
+                            f"Listing {i} (Sec. 4)")
+            for i, (_, _, c, e) in enumerate(LISTING_SRC, 1)}
+
+
+def make_tutorial() -> None:
+    """Write tutorial.ipynb from the same constants the listings check asserts."""
+    write_notebook("tutorial.ipynb",
+                   "A preconditioned quantum linear solver for periodic two-phase heat conduction",
+                   "The three listings of Section 4 of the paper, with the output printed there. "
+                   "They go from the package used as a library, through the gate-level isometry, "
+                   "to the whole inverse as one circuit.\n"
+                   "\n"
+                   "Install the package first, from the repository root: "
+                   "`pip install -r requirements.txt`.",
+                   LISTING_SRC)
+
+
+TUTORIAL = {"tutorial": (make_tutorial, "tutorial.ipynb from Listings 1 to 3")}
 
 
 if __name__ == "__main__":
-    dispatch(sys.argv[1:], {"tables": TABLES, "checks": CHECKS, "listings": LISTINGS})
+    dispatch(sys.argv[1:], {"tables": TABLES, "checks": CHECKS, "listings": LISTINGS,
+                            "tutorial": TUTORIAL})
