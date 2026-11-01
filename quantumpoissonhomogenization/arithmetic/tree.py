@@ -168,7 +168,7 @@ class Tree:
         return _toffoli(self.c.gates[slice(*self.gate_range)])
 
     def formulas(self):
-        """Closed forms of Sec. 5 for the arithmetic stage: vectoring nodes cost
+        """Closed forms of Sec. 6 for the arithmetic stage: vectoring nodes cost
         4 I (W - 1) each, known nodes 2 (W - 1)(s - 1) for s signed digits."""
         I, W, m = self.I, self.W, self.m
         n_vec = len(self.dbits)

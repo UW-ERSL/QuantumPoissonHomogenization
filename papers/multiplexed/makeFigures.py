@@ -16,7 +16,7 @@ from quantumpoissonhomogenization.reproduce import dispatch
 
 
 def draw_error() -> None:
-    """Figure of Sec. 4: the measured error of the prepared vector c~(k).
+    """Figure of Sec. 5: the measured error of the prepared vector c~(k).
 
     (a) delta(k) = ||c~(k) - c(k)/||c(k)|| || against ||c(k)|| for every k != 0 at
         N = 64, F = 24, under the line 16 2^-F/||c||.
@@ -88,7 +88,7 @@ def draw_error() -> None:
     print("wrote figs/error.pdf")
 
 
-FIGURES = {"error": (draw_error, "Figure 4: the measured error of the prepared vector (Sec. 4)")}
+FIGURES = {"error": (draw_error, "Figure 4: the measured error of the prepared vector (Sec. 5)")}
 
 
 if __name__ == "__main__":
