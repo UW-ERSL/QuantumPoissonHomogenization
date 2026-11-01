@@ -1,6 +1,6 @@
 """alternatives -- cost estimates of the two standard constructions of the
 multiplexed preparation of c(k)/||c(k)||, against which the CORDIC circuit
-(poisson_isometry) is compared in Sec. 6 of the paper.
+(poisson_isometry) is compared in Sec. 5 of the paper.
 
     multiplexor  standard state preparation multiplexed over k (Mottonen et al.):
                  two uniformly controlled R_y gates, N^2 and 2 N^2 rotations at

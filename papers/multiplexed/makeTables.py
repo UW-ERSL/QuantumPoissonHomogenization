@@ -1,10 +1,10 @@
 """makeTables.py -- the tables and the checks of the multiplexed state preparation paper.
 
-    python makeTables.py                 Table 3 (tables/options.tex), and Theorem 2 and Table 2 with Sec. 5
+    python makeTables.py                 Table 3 (tables/options.tex), and Theorem 2 and Table 2 with Sec. 4
     python makeTables.py options         just Table 3
     python makeTables.py checks          the worked example, the rotation-mode and vectoring bounds of the
-                                         proof of Proposition 1, and the counts of Sec. 6
-    python makeTables.py listings        Listings 1-3 of Sec. 4, output compared with the paper
+                                         proof of Proposition 1, and the counts of Sec. 5
+    python makeTables.py listings        Listings 1-3 of Sec. 6, output compared with the paper
     python makeTables.py tutorial        tutorial.ipynb from Listings 1-3
     python makeTables.py --list          names
 
@@ -27,10 +27,10 @@ from quantumpoissonhomogenization.reproduce import dispatch, run_listing, write_
 #  tables
 # ==========================================================================
 def tab_options() -> None:
-    """Sec. 6, Table 3: the CORDIC circuit against the two standard constructions
+    """Sec. 5, Table 3: the CORDIC circuit against the two standard constructions
     (multiplexor of standard state preparation, QROM lookup of tabulated angles),
     at the accuracy delta = 1.955e-10, for N = 8 to 4096. Asserts the statements
-    of Secs. 6 and 7 (crossovers, F = 45 and b = 35 at N = 1024, about 1,800
+    of Secs. 5 and 7 (crossovers, F = 45 and b = 35 at N = 1024, about 1,800
     Toffoli gates per doubling of N, synthesis about 11 percent of the T count),
     prints every N, and writes the rows of Table 3 (N = 16, 64, 256, 1024, 2048,
     4096) to tables/options.tex."""
@@ -95,7 +95,7 @@ def tab_cost() -> None:
        paper).
     2. Error of the prepared vector c~(k) against c(k)/||c(k)||, simulated bit by bit
        over every k != 0, for N = 4 ... 256 and F = 12, 16, ..., 32 (42 cases):
-       the measured bound 6 N 2^-F of Sec. 5, and the numbers of the abstract at
+       the measured bound 6 N 2^-F of Sec. 4, and the numbers of the abstract at
        N = 32, F = 32.
     3. The block itself: e^(i(phi1+phi2)) T c~(k) against Vhat(k) assembled element
        by element from the Q4 gradient, at N = 16, F = 24."""
@@ -179,7 +179,7 @@ def tab_cost() -> None:
 
 
 # ==========================================================================
-#  checks: the numbers of Secs. 2, 3, 5, and 6 that the text quotes outside the tables
+#  checks: the numbers of Secs. 2, 3, 4, and 5 that the text quotes outside the tables
 # ==========================================================================
 def check_worked() -> None:
     """Secs. 2 and 3, the worked example: k = (3, 1), N = 16, F = 12, registers of
@@ -301,7 +301,7 @@ def check_lemma() -> None:
 
 
 def check_counts() -> None:
-    """Sec. 6: assert the Toffoli and work-qubit counts against the gate lists, and
+    """Sec. 5: assert the Toffoli and work-qubit counts against the gate lists, and
     check that the work register returns to zero and the inputs are unchanged."""
     rng = np.random.default_rng(0)
     print(" m   F   G   Toffoli (arith.)  work qubits  rot. Toffoli  ctrl. Ry  clean")
@@ -316,7 +316,7 @@ def check_counts() -> None:
             r = t.rotation_counts()
             print(f"{2**L:2d}  {F:3d}  {t.G}   {t.toffoli():10d}   {t.work_qubits:10d}"
                   f"   {r['toffoli']:8d}   {r['controlled_ry']:6d}    yes")
-    print("all counts match the formulas of Sec. 6")
+    print("all counts match the formulas of Sec. 5")
 
     # Part 1: the counts of the full circuit against its gate lists, on random
     # angles and coefficient matrices, with the work register checked on every index
@@ -334,23 +334,23 @@ def check_counts() -> None:
         e = np.linalg.norm(amp - exact_unit(vex), axis=1)
         print(f"  d = {d}, R = {R}, m = {m0}, F = {F}: Toffoli {sv.toffoli()}, entries within bound, "
               f"max err {e.max():.1e}, clean")
-    print("all Part 1 counts match the formulas of Sec. 6")
+    print("all Part 1 counts match the formulas of Sec. 5")
 
 
 TABLES = {
-    "options": (tab_options, "Table 3: the circuit against the multiplexor and the QROM lookup (Sec. 6)"),
-    "cost":    (tab_cost,    "Theorem 2 and Table 2 at N = 1024, F = 45; the 42 error cases (Sec. 5); the abstract"),
+    "options": (tab_options, "Table 3: the circuit against the multiplexor and the QROM lookup (Sec. 5)"),
+    "cost":    (tab_cost,    "Theorem 2 and Table 2 at N = 1024, F = 45; the 42 error cases (Sec. 4); the abstract"),
 }
 CHECKS = {
     "worked":   (check_worked,   "the worked example at k = (3, 1), N = 16, F = 12 (Secs. 2, 3)"),
     "rotation": (check_rotation, "rotation-mode bound (Proposition 1, first step) on random angles"),
     "lemma":    (check_lemma,    "vectoring bounds (Proposition 1, third step) on random integer vectorings"),
-    "counts":   (check_counts,   "Toffoli and work-qubit counts against the gate lists (Sec. 6)"),
+    "counts":   (check_counts,   "Toffoli and work-qubit counts against the gate lists (Sec. 5)"),
 }
 
 
 # ==========================================================================
-#  listings: the code of Sec. 4 as printed in the paper, and its printed output
+#  listings: the code of Sec. 6 as printed in the paper, and its printed output
 # ==========================================================================
 LISTING_1 = '''
 import numpy as np
@@ -408,22 +408,21 @@ error    = 5.9e-04
 
 LISTING_3 = '''
 from quantumpoissonhomogenization.arithmetic import (
-    alternatives)
+    poisson_isometry)
 
-print("    N   F  T: multiplexor   lookup  circuit")
-for N in (16, 1024, 2048, 4096):
-    o = alternatives.options(N, delta=1.955e-10)
-    m, l, a = (o[k]["T"] for k in
-               ("multiplexor", "lookup", "arithmetic"))
-    F = o["arithmetic"]["F"]
-    print(f"{N:5d}  {F}  {m:14.1e} {l:8.1e} {a:8.1e}")
+for n in (4, 6, 8, 10):                # N = 16 to 1024
+    sv = poisson_isometry(n, F=45)
+    r = sv.tree.rotation_counts()
+    tof = sum(sv.toffoli().values()) + r["toffoli"]
+    work = sv.c.n - 2 * n + r["temporaries"]
+    print(f"N = {2**n:4d}: Toffoli {tof:,},"
+          f" work {work:,}, table {3 * 4**n:,}")
 '''
 OUTPUT_3 = '''
-    N   F  T: multiplexor   lookup  circuit
-   16  39         9.6e+04  1.3e+03  1.5e+05
- 1024  45         5.1e+08  7.7e+04  2.0e+05
- 2048  46         2.1e+09  1.5e+05  2.1e+05
- 4096  47         8.7e+09  3.1e+05  2.2e+05
+N =   16: Toffoli 44,424, work 5,672, table 768
+N =   64: Toffoli 44,424, work 5,672, table 12,288
+N =  256: Toffoli 44,424, work 5,672, table 196,608
+N = 1024: Toffoli 44,424, work 5,672, table 3,145,728
 '''
 
 LISTING_SRC = [
@@ -433,7 +432,7 @@ LISTING_SRC = [
      "compare the prepared vector with $c(k)/\\|c(k)\\|_2$. The checks confirm that the work register "
      "returns to $|0\\rangle$ and that the bits of $k$ are restored, which is what allows the circuit "
      "to be used inside a block encoding. The largest error is below the measured bound "
-     "$6N\\,2^{-F}$ of Section 5. Runs in a few seconds.",
+     "$6N\\,2^{-F}$ of Section 4. Runs in a few seconds.",
      LISTING_1, OUTPUT_1),
     ("Listing 2. The example of Sections 2 and 3: one wavenumber, $k = (3, 1)$, at $N = 16$ and $F = 12$",
      "One level down, to the registers. For one wavenumber, we print the integers $Z$ that Part 1 "
@@ -441,15 +440,16 @@ LISTING_SRC = [
      "Part 2 prepares from them. The integers are the bit strings of the example in Section 2, and the "
      "prepared vector and its error are those of the example in Section 3. Runs in under a second.",
      LISTING_2, OUTPUT_2),
-    ("Listing 3. The T counts of the three constructions at $\\delta = 1.96 \\times 10^{-10}$",
-     "The circuit against the two standard constructions: standard state preparation multiplexed over "
-     "the wavenumber, and a lookup of tabulated angles in a quantum read-only memory (QROM). The T "
-     "counts are estimates, from the gate lists for the circuit and from published cost formulas for "
-     "the other two. The lookup needs the fewest T gates up to $N = 2048$, and the circuit the fewest "
-     "at $N = 4096$, as in Table 3. Runs in about a second.",
+    ("Listing 3. The Toffoli count and work register of the circuit at $F = 45$ for $N = 16$ to $1024$",
+     "The property the circuit is built for: its cost does not depend on $N$. At $F = 45$, we build "
+     "the circuit for $N = 16$ to $1024$ and print its Toffoli count and work register, with the "
+     "number $3N^2$ of angles that a multiplexor or a table lookup must tabulate. The counts are those "
+     "of Theorem 2 and Table 2 at every $N$, while the table grows to more than three million angles "
+     "at $N = 1024$. At a fixed accuracy, the circuit grows with $N$ only through $F$, as in Table 3. "
+     "Runs in about four seconds.",
      LISTING_3, OUTPUT_3)]
 LISTINGS = {f"listing{i}": (lambda n=f"listing{i}", c=c, e=e: run_listing(n, c, e),
-                            f"Listing {i} (Sec. 4)")
+                            f"Listing {i} (Sec. 6)")
             for i, (_, _, c, e) in enumerate(LISTING_SRC, 1)}
 
 
@@ -457,9 +457,9 @@ def make_tutorial() -> None:
     """Write tutorial.ipynb from the same constants the listings check asserts."""
     write_notebook("tutorial.ipynb",
                    "Multiplexed state preparation by CORDIC arithmetic for the periodic Poisson isometry",
-                   "The three listings of Section 4 of the paper, with the output printed there. They go "
+                   "The three listings of Section 6 of the paper, with the output printed there. They go "
                    "from the circuit used as a library, through one wavenumber in its registers, to its "
-                   "cost against the two standard constructions.\n"
+                   "cost as N grows.\n"
                    "\n"
                    "Install the package first, from the repository root: "
                    "`pip install -r requirements.txt`.",
